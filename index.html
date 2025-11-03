@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorateur d'Opportunités | Samuel Reboul</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .filter-btn.active {
+            background-color: #2563eb;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .filter-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(3px);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Chosen Palette: Warm Neutrals (bg-gray-50, text-gray-800) with a professional Blue accent (bg-blue-600) -->
+    <!-- Application Structure Plan: A single-page, thematic dashboard. Structure: 1. Header (Welcome), 2. "Vos Atouts" (Key monetizable skills from CV with LLM button for service generation), 3. "Tableau de Bord des Opportunités" (Interactive card filtering for Freelance, Side-Projects, etc.), 4. "Analyse Potentiel" (Chart.js visualization of skill potential vs. effort), 5. "Prochaines Étapes" (Actionable advice with LLM button for pitch drafting). This structure directly answers the user's question ("how to make money") by using their CV data as the input for a personalized strategy dashboard, guiding them from *their* assets to *their* opportunities and providing LLM tools to facilitate execution. -->
+    <!-- Visualization & Content Choices: [CV Skill: Excel/VBA -> Goal: Inform/Generate -> Viz: HTML Badge + LLM Button -> Interaction: JS Click to generate service proposal (API) -> Justification: Quick static summary + Tool for conversion], [CV Skill: Power BI -> Goal: Inform/Generate -> Viz: HTML Badge + LLM Button -> Interaction: JS Click to generate service proposal (API) -> Justification: Quick static summary + Tool for conversion], [Report Info: Monetization Paths -> Goal: Organize/Filter -> Viz: HTML Cards -> Interaction: JS Click Filters -> Justification: Allows user to explore specific paths (Freelance, etc.)], [Report Info: All Skills Analysis -> Goal: Compare/Relate -> Viz: Chart.js Bubble Chart -> Interaction: Hover Tooltip -> Justification: Visually maps skill value (potential vs. current level) to guide focus. Library: Chart.js (Canvas)], [Report Info: Outreach Steps -> Goal: Execute/Draft -> Viz: HTML List + LLM Button -> Interaction: JS Click to generate professional pitch (API) -> Justification: Provides a key execution tool.] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Overlay de chargement -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner mb-4"></div>
+        <p class="text-xl font-semibold text-blue-600">Gemini est en train de réfléchir... Veuillez patienter.</p>
+    </div>
+
+    <div class="container mx-auto max-w-6xl p-4 md:p-8">
+
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-gray-900 mb-3">Bonjour, Samuel</h1>
+            <p class="text-lg md:text-xl text-blue-700 font-medium">Comment monétiser vos compétences depuis votre ordinateur ?</p>
+            <p class="mt-2 text-gray-600 max-w-3xl mx-auto">Votre CV est rempli de compétences très demandées. J'ai créé ce tableau de bord interactif pour explorer comment les transformer en opportunités concrètes, en se basant sur vos expériences et formations. Deux nouveaux outils ✨ Gemini ✨ sont disponibles pour vous aider à passer à l'action !</p>
+        </header>
+
+        <!-- Section 1: Vos Atouts Clés -->
+        <section id="atouts" class="mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Vos Atouts Monétisables</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Ces compétences, issues de votre CV, sont particulièrement recherchées pour des missions à distance. Utilisez l'outil ✨ Gemini ✨ pour générer des idées de services concrets.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col" data-skill="Excel et VBA">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">Excel & VBA</h3>
+                    <p class="text-gray-600 flex-grow">Votre mention "avancé" et votre expérience chez CEVA (macros VBA) sont un atout majeur. L'automatisation de rapports et la modélisation financière sont très demandées.</p>
+                    <button class="generate-service-btn mt-4 bg-purple-100 text-purple-700 py-2 px-4 rounded-lg font-bold hover:bg-purple-200 transition duration-150" data-skill="Automatisation de rapports Excel avec VBA">✨ Idée de Service</button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col" data-skill="Power BI">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">Power BI</h3>
+                    <p class="text-gray-600 flex-grow">Votre niveau "intermédiaire" est parfait pour créer des dashboards pour des PME qui n'ont pas d'analyste à plein temps. La visualisation de données est un marché en pleine croissance.</p>
+                    <button class="generate-service-btn mt-4 bg-purple-100 text-purple-700 py-2 px-4 rounded-lg font-bold hover:bg-purple-200 transition duration-150" data-skill="Création de Dashboards de Trésorerie Power BI">✨ Idée de Service</button>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col" data-skill="Python (en Finance)">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">Python (en Finance)</h3>
+                    <p class="text-gray-600 flex-grow">Vu dans votre Master, c'est une compétence d'avenir. L'automatisation de tâches d'analyse financière, le backtesting de stratégies ou l'analyse de données de marché sont des niches lucratives.</p>
+                    <button class="generate-service-btn mt-4 bg-purple-100 text-purple-700 py-2 px-4 rounded-lg font-bold hover:bg-purple-200 transition duration-150" data-skill="Analyse automatisée des données de marché avec Python">✨ Idée de Service</button>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col" data-skill="SQL & Analyse">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">SQL & Analyse</h3>
+                    <p class="text-gray-600 flex-grow">Vos bases en SQL, combinées à votre double licence Éco-Finance, vous permettent de gérer et d'analyser des données financières à la source, une compétence rare et précieuse.</p>
+                    <button class="generate-service-btn mt-4 bg-purple-100 text-purple-700 py-2 px-4 rounded-lg font-bold hover:bg-purple-200 transition duration-150" data-skill="Nettoyage et Requêtage SQL de bases de données financières">✨ Idée de Service</button>
+                </div>
+                
+                <!-- Zone d'affichage de la proposition de service générée -->
+                <div id="service-output" class="lg:col-span-4 bg-blue-50 p-6 rounded-xl shadow-inner border border-blue-200 mt-6 hidden">
+                    <h3 class="text-xl font-bold text-blue-800 mb-3">Proposition de Service Générée (Gemini)</h3>
+                    <pre id="service-text" class="whitespace-pre-wrap text-gray-700"></pre>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 2: Tableau de Bord des Opportunités -->
+        <section id="opportunites" class="mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Tableau de Bord des Opportunités</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Explorez différentes façons de générer des revenus. Cliquez sur les filtres pour affiner les types d'opportunités qui vous intéressent.</p>
+            
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                <button class="filter-btn active py-2 px-4 rounded-full bg-gray-200 text-gray-700 font-medium" data-filter="all">Toutes les opportunités</button>
+                <button class="filter-btn py-2 px-4 rounded-full bg-gray-200 text-gray-700 font-medium" data-filter="freelance">Freelance (PME/TPE)</button>
+                <button class="filter-btn py-2 px-4 rounded-full bg-gray-200 text-gray-700 font-medium" data-filter="side-project">Projets "Side-Hustle"</button>
+                <button class="filter-btn py-2 px-4 rounded-full bg-gray-200 text-gray-700 font-medium" data-filter="long-terme">Montée en Compétence</button>
+            </div>
+
+            <div id="opportunities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div class="opportunity-card bg-white p-6 rounded-xl shadow-lg border border-gray-200" data-category="freelance">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Mission : Dashboard Power BI</h3>
+                    <p class="text-gray-600 mb-4">Aider une PME locale (ex: cabinet comptable comme Exco Aese) à migrer ses rapports Excel vers un dashboard Power BI interactif pour le suivi de la trésorerie.</p>
+                    <span class="text-sm font-medium text-blue-600 bg-blue-100 py-1 px-3 rounded-full">Power BI</span>
+                </div>
+
+                <div class="opportunity-card bg-white p-6 rounded-xl shadow-lg border border-gray-200" data-category="freelance">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Mission : Automatisation Excel</h3>
+                    <p class="text-gray-600 mb-4">Développer des macros VBA (comme chez CEVA) pour un cabinet de conseil financier afin d'automatiser la génération de leurs rapports mensuels. Gagner 10h/mois pour eux vaut de l'or.</p>
+                    <span class="text-sm font-medium text-green-600 bg-green-100 py-1 px-3 rounded-full">Excel & VBA</span>
+                </div>
+
+                <div class="opportunity-card bg-white p-6 rounded-xl shadow-lg border border-gray-200" data-category="side-project">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Projet : Modèle Financier</h3>
+                    <p class="text-gray-600 mb-4">Créer un modèle Excel/VBA sophistiqué (ex: pour LMNP, vu chez Exco) et le vendre en ligne. Ou créer un tracker de portefeuille personnel et le partager.</p>
+                    <span class="text-sm font-medium text-green-600 bg-green-100 py-1 px-3 rounded-full">Excel & VBA</span>
+                </div>
+
+                <div class="opportunity-card bg-white p-6 rounded-xl shadow-lg border border-gray-200" data-category="long-terme">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Focus : Python & Finance</h3>
+                    <p class="text-gray-600 mb-4">Utiliser Python (vu en Master) pour analyser des données de marché (via API) et écrire des articles de blog ou une newsletter. Construit votre réputation d'expert.</p>
+                    <span class="text-sm font-medium text-purple-600 bg-purple-100 py-1 px-3 rounded-full">Python</span>
+                </div>
+
+                <div class="opportunity-card bg-white p-6 rounded-xl shadow-lg border border-gray-200" data-category="freelance">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Mission : Analyse de Données</h3>
+                    <p class="text-gray-600 mb-4">Proposer des missions d'analyse de rentabilité (vu chez CEVA) à des entreprises de logistique ou e-commerce, en utilisant Excel, Power BI et vos bases en SQL.</p>
+                    <span class="text-sm font-medium text-blue-600 bg-blue-100 py-1 px-3 rounded-full">Power BI</span>
+                    <span class="text-sm font-medium text-yellow-600 bg-yellow-100 py-1 px-3 rounded-full ml-2">SQL</span>
+                </div>
+
+                 <div class="opportunity-card bg-white p-6 rounded-xl shadow-lg border border-gray-200" data-category="side-project">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Projet : Template Power BI</h3>
+                    <p class="text-gray-600 mb-4">Designer un template de dashboard Power BI visuellement attractif pour l'analyse de budget (vu en tant que Trésorier ACD) et le mettre sur des marketplaces.</p>
+                    <span class="text-sm font-medium text-blue-600 bg-blue-100 py-1 px-3 rounded-full">Power BI</span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 3: Analyse Potentiel vs. Compétence -->
+        <section id="analyse" class="mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Analyse : Potentiel vs. Compétence</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Cette visualisation vous aide à voir où vous en êtes. L'objectif est d'identifier les compétences à fort potentiel (en haut) et de voir lesquelles vous maîtrisez déjà (à droite). La taille de la bulle représente la demande actuelle du marché.</p>
+            
+            <div class="bg-white p-4 md:p-8 rounded-xl shadow-lg border border-gray-200">
+                <div class="chart-container">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Prochaines Étapes Concrètes -->
+        <section id="etapes" class="mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Prochaines Étapes Concrètes</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Commencer est souvent le plus difficile. Cliquez sur le bouton ✨ pour générer un e-mail de prise de contact basé sur votre profil.</p>
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 mb-6">
+                    <ol class="list-decimal list-inside space-y-4">
+                        <li class="text-gray-700"><strong class="font-semibold text-gray-900">Créez un Portfolio (Simple) :</strong> Prenez 1-2 projets de votre CV (ex: l'outil VBA de CEVA, un dashboard Power BI). Anonymisez les données et créez une page simple (même un PDF) qui explique : 1. Le Problème, 2. Votre Solution, 3. Les Résultats.</li>
+                        <li class="text-gray-700"><strong class="font-semibold text-gray-900">Activez votre Réseau (Discrètement) :</strong> Parlez à vos anciens tuteurs de stage (CEVA, Exco). Dites-leur que vous êtes ouvert à de petites missions de freelance à côté de vos études. Un ancien manager est souvent le premier client.</li>
+                        <li class="text-gray-700"><strong class="font-semibold text-gray-900">Inscrivez-vous sur une Plateforme :</strong> Créez un profil sur Malt ou Upwork. Inspirez-vous des profils d'autres freelances en Excel/Power BI pour rédiger le vôtre. Ne vous souciez pas du prix au début, l'objectif est d'obtenir une première mission et un avis positif.</li>
+                        <li class="text-gray-700"><strong class="font-semibold text-gray-900">Continuez à Apprendre (Ciblé) :</strong> Le graphique le montre : votre compétence en Python a un potentiel énorme. Consacrez quelques heures par semaine à des projets Python spécifiquement liés à la finance (analyse de données, automatisation).</li>
+                    </ol>
+                </div>
+                <button id="generate-pitch-btn" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-bold text-xl hover:bg-green-700 transition duration-150 shadow-md">✨ Rédiger Mon Pitch de Prise de Contact</button>
+
+                 <!-- Zone d'affichage de l'e-mail généré -->
+                <div id="pitch-output" class="bg-yellow-50 p-6 rounded-xl shadow-inner border border-yellow-200 mt-6 hidden">
+                    <h3 class="text-xl font-bold text-yellow-800 mb-3">Brouillon d'E-mail (Gemini)</h3>
+                    <pre id="pitch-text" class="whitespace-pre-wrap text-gray-700"></pre>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center mt-12 pt-8 border-t border-gray-200">
+            <p class="text-gray-500">Généré pour Samuel Reboul, basé sur les compétences et expériences de son CV.</p>
+            <p class="text-gray-400 text-sm mt-1">Cet outil est une exploration interactive et ne constitue pas un conseil financier ou de carrière garanti.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const API_KEY = ""; 
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+
+        // Contenu du CV analysé pour les prompts
+        const CV_SUMMARY = `Samuel Reboul, 21 ans, Master 1 MBFA, double licence Éco/Finance. Expériences clés : Stagiaire en contrôle de gestion chez CEVA (création de macros VBA pour automatisation des rapports, analyse de rentabilité Power BI) ; Stagiaire en expertise comptable chez Exco Aese (gestion de dossiers LMNP, liasses fiscales) ; Trésorier ACD (gestion de budget 70k€). Compétences techniques : Excel/VBA (avancé), Power BI (intermédiaire), Python/SQL (bases).`;
+        const LOADING_OVERLAY = document.getElementById('loading-overlay');
+
+        function showLoading(message = "Gemini est en train de réfléchir...") {
+            document.querySelector('#loading-overlay p').textContent = message;
+            LOADING_OVERLAY.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            LOADING_OVERLAY.style.display = 'none';
+        }
+
+        async function fetchGeminiResponse(systemPrompt, userQuery) {
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && i < 2) { // 429 Too Many Requests
+                            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                            continue;
+                        }
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur : Contenu non généré ou structure inattendue.";
+                    return text;
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    if (i === 2) return "Erreur lors de la connexion à l'API. Veuillez réessayer.";
+                }
+            }
+        }
+        
+        // Fonction pour générer la proposition de service (Section 1)
+        async function generateServiceProposal(skill, specificService) {
+            showLoading(`Génération de la proposition de service pour ${skill}...`);
+            const systemPrompt = `Vous êtes un consultant en stratégie freelance. Rédigez une proposition de service percutante pour un jeune freelance nommé Samuel Reboul, 21 ans (Master MBFA). Le ton doit être professionnel, axé sur les résultats et l'expérience. Le format doit être : Titre accrocheur, Problème que vous résolvez, Solution proposée, Expérience pertinente (mentionnez CEVA, Exco ou ACD si applicable), Bénéfices pour le client. Ne parlez que du service demandé.`;
+            
+            const userQuery = `Génère une proposition de service pour Samuel Reboul, axée sur la compétence : "${specificService}". Le client type est une PME ou un cabinet de conseil. Ses expériences clés sont : ${CV_SUMMARY}`;
+            
+            const responseText = await fetchGeminiResponse(systemPrompt, userQuery);
+
+            document.getElementById('service-text').textContent = responseText;
+            document.getElementById('service-output').classList.remove('hidden');
+            hideLoading();
+            document.getElementById('service-output').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Fonction pour générer le pitch de prise de contact (Section 4)
+        async function generatePitch() {
+            showLoading("Rédaction du brouillon d'e-mail professionnel...");
+            const systemPrompt = `Vous êtes un coach de carrière spécialisé en finance. Rédigez un brouillon d'e-mail de prise de contact pour Samuel Reboul, un étudiant de 21 ans en Master MBFA, qui souhaite solliciter de petites missions de freelance auprès d'anciens tuteurs de stage (ex: CEVA, Exco) ou de contacts professionnels. Le ton doit être humble, reconnaissant, proactif, et orienté vers une solution spécifique. Inclure une phrase pour demander conseil en plus de la mission. Utiliser le format E-mail (Objet, Corps du texte).`;
+
+            const userQuery = `Rédige un e-mail de prise de contact pour Samuel. Il cherche à proposer des services de "petit-freelance" en automatisation Excel (VBA) et/ou création de Dashboards Power BI. Ses expériences clés à mettre en avant sont : ${CV_SUMMARY}`;
+            
+            const responseText = await fetchGeminiResponse(systemPrompt, userQuery);
+
+            document.getElementById('pitch-text').textContent = responseText;
+            document.getElementById('pitch-output').classList.remove('hidden');
+            hideLoading();
+            document.getElementById('pitch-output').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Logique de filtrage des opportunités (existante)
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const opportunityCards = document.querySelectorAll('.opportunity-card');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const filter = button.dataset.filter;
+
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    opportunityCards.forEach(card => {
+                        const cardCategory = card.dataset.category;
+                        if (filter === 'all' || cardCategory === filter) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // Événements pour la génération de proposition de service (Gemini)
+            document.querySelectorAll('.generate-service-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const skill = button.closest('[data-skill]').dataset.skill;
+                    const specificService = button.dataset.skill;
+                    generateServiceProposal(skill, specificService);
+                });
+            });
+
+            // Événement pour la génération du pitch (Gemini)
+            document.getElementById('generate-pitch-btn').addEventListener('click', generatePitch);
+
+            // Logique du graphique Chart.js (existante)
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            const skillsChart = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Excel / VBA',
+                            data: [{ x: 3, y: 2.5, r: 20 }],
+                            backgroundColor: 'rgba(21, 128, 61, 0.7)',
+                            borderColor: 'rgba(21, 128, 61, 1)',
+                        },
+                        {
+                            label: 'Power BI',
+                            data: [{ x: 2, y: 3, r: 25 }],
+                            backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                            borderColor: 'rgba(37, 99, 235, 1)',
+                        },
+                        {
+                            label: 'Python (Finance)',
+                            data: [{ x: 1, y: 3.5, r: 30 }],
+                            backgroundColor: 'rgba(124, 58, 237, 0.7)',
+                            borderColor: 'rgba(124, 58, 237, 1)',
+                        },
+                        {
+                            label: 'SQL',
+                            data: [{ x: 1, y: 2, r: 15 }],
+                            backgroundColor: 'rgba(217, 119, 6, 0.7)',
+                            borderColor: 'rgba(217, 119, 6, 1)',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const competence = context.parsed.x;
+                                    const potentiel = context.parsed.y;
+                                    const demande = context.raw.r;
+
+                                    let competenceLabel = '';
+                                    if (competence === 1) competenceLabel = 'Base';
+                                    if (competence === 2) competenceLabel = 'Intermédiaire';
+                                    if (competence === 3) competenceLabel = 'Avancé';
+
+                                    return `${label}: Compétence (${competenceLabel}), Potentiel (${potentiel}/4), Demande (${demande})`;
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Analyse des Compétences : Potentiel vs. Maîtrise',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Votre Maîtrise Actuelle (basée sur le CV)',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            min: 0,
+                            max: 4,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    const labels = ['', 'Base', 'Intermédiaire', 'Avancé', ''];
+                                    return labels[value] || '';
+                                }
+                            }
+                        },
+                        y: {
+                             title: {
+                                display: true,
+                                text: 'Potentiel de Monétisation',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            min: 0,
+                            max: 4,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    const labels = ['Bas', 'Moyen', 'Élevé', 'Très Élevé', ''];
+                                    return labels[value] || '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
